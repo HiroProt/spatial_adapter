@@ -160,7 +160,7 @@ ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval do
      schemas = schema_search_path.split(/,/).map { |p| quote(p) }.join(',')
      
      # Changed from upstread: link to pg_am to grab the index type (e.g. "gist")
-     result = query(<<-SQL, name)
+     result = execute(<<-SQL, name)
        SELECT distinct i.relname, d.indisunique, d.indkey, t.oid, am.amname
          FROM pg_class t
          INNER JOIN pg_index d ON t.oid = d.indrelid
@@ -182,7 +182,7 @@ ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval do
       indtype = row[4]
 
       # Changed from upstream: need to get the column types to test for spatial indexes
-      columns = query(<<-SQL, "Columns for index #{row[0]} on #{table_name}").inject({}) {|attlist, r| attlist[r[1]] = [r[0], r[2]]; attlist}
+      columns = execute(<<-SQL, "Columns for index #{row[0]} on #{table_name}").inject({}) {|attlist, r| attlist[r[1]] = [r[0], r[2]]; attlist}
       SELECT a.attname, a.attnum, t.typname
       FROM pg_attribute a
       INNER JOIN pg_type t ON a.atttypid = t.oid
@@ -216,7 +216,7 @@ ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval do
   end
   
   def column_spatial_info(table_name)
-    constr = query("SELECT * FROM geometry_columns WHERE f_table_name = '#{table_name}'")
+    constr = execute("SELECT * FROM geometry_columns WHERE f_table_name = '#{table_name}'")
 
     raw_geom_infos = {}
     constr.each do |constr_def_a|
